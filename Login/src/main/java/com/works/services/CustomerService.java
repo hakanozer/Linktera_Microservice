@@ -1,7 +1,9 @@
 package com.works.services;
 
 import com.works.entities.Customer;
+import com.works.entities.DBSession;
 import com.works.repositories.CustomerRepository;
+import com.works.repositories.DBSessionRepository;
 import com.works.utils.REnum;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,6 +23,7 @@ public class CustomerService {
     final CustomerRepository customerRepository;
     final TinkEncDec tinkEncDec;
     final HttpSession httpSession;
+    final DBSessionRepository dbSessionRepository;
 
     public ResponseEntity register(Customer customer) {
         Map<REnum, Object> hm = new LinkedHashMap<>();
@@ -50,6 +53,15 @@ public class CustomerService {
                 httpSession.setAttribute("user", c);
                 String token = httpSession.getId();
                 hm.put(REnum.token, token);
+
+                boolean dbControl = dbSessionRepository.existsBySessionID(token);
+                if ( !dbControl ) {
+                    DBSession dbSession = new DBSession();
+                    dbSession.setSessionID(token);
+                    dbSession.setStatus(true);
+                    dbSessionRepository.save(dbSession);
+                }
+
                 return new ResponseEntity(hm, HttpStatus.OK);
             }
         }
@@ -62,8 +74,9 @@ public class CustomerService {
     public ResponseEntity status(HttpServletRequest req) {
         Map<REnum, Object> hm = new LinkedHashMap<>();
         String token = req.getHeader("token");
-        String sessionID = req.getSession().getId();
-        if ( token != null && token.equals(sessionID) ) {
+        Optional<DBSession> optionalDBSession = dbSessionRepository.findBySessionIDEqualsAndStatusEquals(token, true);
+        //String sessionID = req.getSession().getId();
+        if ( token != null && optionalDBSession.isPresent() ) {
             hm.put(REnum.status, true);
             Customer c = (Customer)  req.getSession().getAttribute("user");
             hm.put(REnum.result, c );
@@ -71,7 +84,7 @@ public class CustomerService {
         }
         hm.put(REnum.status, false);
         hm.put(REnum.errors, "Token Error, Please Login");
-        return new ResponseEntity(hm, HttpStatus.UNAUTHORIZED);
+        return new ResponseEntity(hm, HttpStatus.OK);
     }
 
 

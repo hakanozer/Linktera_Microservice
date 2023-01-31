@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 
 @RestController
 @RequestMapping("/customer")
@@ -24,7 +25,7 @@ public class CustomerRestController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity login( @RequestBody Customer customer ) {
+    public ResponseEntity login( @Valid @RequestBody Customer customer ) {
         return customerService.login(customer);
     }
 

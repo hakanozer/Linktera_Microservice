@@ -5,6 +5,11 @@ import org.springframework.beans.factory.annotation.Required;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
@@ -17,6 +22,7 @@ import java.util.List;
 public class FilterConfig implements Filter {
 
     final DiscoveryClient discoveryClient;
+    final RestTemplate restTemplate;
 
     @Override
     public void init(javax.servlet.FilterConfig filterConfig) throws ServletException {
@@ -39,8 +45,20 @@ public class FilterConfig implements Filter {
                 ServiceInstance instance = ls.get(0);
                 String gotoLoginUrl = instance.getUri().toString();
                 gotoLoginUrl = gotoLoginUrl + "/customer/status";
+                System.out.println(token);
                 System.out.println( gotoLoginUrl );
-                chain.doFilter(req, res);
+
+                HttpHeaders httpHeaders = new HttpHeaders();
+                httpHeaders.setContentType(MediaType.APPLICATION_JSON);
+                httpHeaders.add("token", token);
+                HttpEntity httpEntity = new HttpEntity("", httpHeaders);
+                ResponseEntity<Login> responseEntity = restTemplate.postForEntity(gotoLoginUrl, httpEntity, Login.class );
+                Login login = responseEntity.getBody();
+                if ( login.getStatus() ) {
+                    chain.doFilter(req, res);
+                }else {
+                    res.sendRedirect("/loginError");
+                }
             }
         } else {
             chain.doFilter(req, res);
@@ -51,5 +69,35 @@ public class FilterConfig implements Filter {
     public void destroy() {
         System.out.println("SERVER DOWN");
     }
+}
 
+
+class Login {
+    private Boolean status;
+    private Object result;
+    private Object errors;
+
+    public Boolean getStatus() {
+        return status;
+    }
+
+    public void setStatus(Boolean status) {
+        this.status = status;
+    }
+
+    public Object getResult() {
+        return result;
+    }
+
+    public void setResult(Object result) {
+        this.result = result;
+    }
+
+    public Object getErrors() {
+        return errors;
+    }
+
+    public void setErrors(Object errors) {
+        this.errors = errors;
+    }
 }
