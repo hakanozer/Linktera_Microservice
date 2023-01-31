@@ -18,4 +18,9 @@ public class ProductRestController {
         return productService.save(product);
     }
 
+    @GetMapping("/allProduct")
+    public ResponseEntity allProduct() {
+        return productService.allProdut();
+    }
+
 }

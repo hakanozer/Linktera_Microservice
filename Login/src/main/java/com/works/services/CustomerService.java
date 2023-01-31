@@ -88,4 +88,12 @@ public class CustomerService {
     }
 
 
+    public ResponseEntity logout() {
+        Map<REnum, Object> hm = new LinkedHashMap<>();
+        httpSession.invalidate();
+        hm.put(REnum.status, true);
+        hm.put(REnum.message, "Logout Success");
+        return new ResponseEntity(hm, HttpStatus.OK);
+    }
+
 }

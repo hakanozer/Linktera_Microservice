@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Required;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -23,6 +24,7 @@ public class FilterConfig implements Filter {
 
     final DiscoveryClient discoveryClient;
     final RestTemplate restTemplate;
+    final Tracer tracer;
 
     @Override
     public void init(javax.servlet.FilterConfig filterConfig) throws ServletException {
@@ -34,6 +36,10 @@ public class FilterConfig implements Filter {
 
         HttpServletRequest req = (HttpServletRequest) request;
         HttpServletResponse res = (HttpServletResponse) response;
+
+        // Span Id
+        String spanid = tracer.currentSpan().context().spanId();
+        res.setHeader("spanid", spanid);
 
         String url = req.getRequestURI();
         String token = req.getHeader("token");
