@@ -1,23 +1,28 @@
 package com.works.services;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixProperty;
 import com.works.entities.Product;
+import com.works.projections.IProJoinCatProjection;
+import com.works.props.ProJoinCat;
 import com.works.props.Products;
+import com.works.repositories.ProductCatRepository;
 import com.works.repositories.ProductRepository;
 import com.works.utils.REnum;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +31,8 @@ public class ProductService {
     final ProductRepository productRepository;
     final DiscoveryClient discoveryClient;
     final RestTemplate restTemplate;
+    final ProductCatRepository productCatRepository;
+    final ObjectMapper objectMapper;
 
     @HystrixCommand(fallbackMethod = "fallBack",
             commandProperties = @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
@@ -36,7 +43,7 @@ public class ProductService {
         //int i = 1 / 0;
         //loginControl();
         try {
-            Thread.sleep(1100);
+            //Thread.sleep(1100);
             hm.put(REnum.status, true);
             hm.put(REnum.result, productRepository.save(product));
         }catch (Exception ex) {}
@@ -85,6 +92,23 @@ public class ProductService {
             hm.put(REnum.status, false);
             hm.put(REnum.message, "Not Found");
         }
+        return new ResponseEntity(hm, HttpStatus.OK);
+    }
+
+
+    public ResponseEntity list( Long cid, int pageCount ) {
+        Map<REnum, Object> hm = new LinkedHashMap<>();
+        hm.put(REnum.status, true);
+
+        Sort sort = Sort.by("price").ascending();
+        Pageable pageable = PageRequest.of(pageCount,3, sort);
+
+        //hm.put(REnum.result, productRepository.findAll() );
+        //hm.put(REnum.result, productCatRepository.proCat() );
+        Page<IProJoinCatProjection> pageList = productRepository.proCatJoin(cid, pageable);
+        List<ProJoinCat> lsx = objectMapper.convertValue( pageList.getContent(), List.class );
+
+        hm.put(REnum.result, pageList );
         return new ResponseEntity(hm, HttpStatus.OK);
     }
 

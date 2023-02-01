@@ -28,4 +28,9 @@ public class ProductRestController {
         return productService.singleProduct(pid);
     }
 
+    @GetMapping("/list")
+    public  ResponseEntity list( @RequestParam(defaultValue = "1") Long cid, @RequestParam(defaultValue = "0") int pageCount ) {
+        return productService.list( cid, pageCount );
+    }
+
 }
