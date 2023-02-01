@@ -11,6 +11,8 @@ import com.works.repositories.ProductCatRepository;
 import com.works.repositories.ProductRepository;
 import com.works.utils.REnum;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.data.domain.Page;
@@ -33,6 +35,7 @@ public class ProductService {
     final RestTemplate restTemplate;
     final ProductCatRepository productCatRepository;
     final ObjectMapper objectMapper;
+    final CacheManager cacheManager;
 
     @HystrixCommand(fallbackMethod = "fallBack",
             commandProperties = @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
@@ -46,6 +49,7 @@ public class ProductService {
             //Thread.sleep(1100);
             hm.put(REnum.status, true);
             hm.put(REnum.result, productRepository.save(product));
+            cacheManager.getCache("product").clear();
         }catch (Exception ex) {}
 
         return new ResponseEntity(hm, HttpStatus.OK);
@@ -96,6 +100,7 @@ public class ProductService {
     }
 
 
+    @Cacheable("product")
     public ResponseEntity list( Long cid, int pageCount ) {
         Map<REnum, Object> hm = new LinkedHashMap<>();
         hm.put(REnum.status, true);
