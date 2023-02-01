@@ -23,4 +23,9 @@ public class ProductRestController {
         return productService.allProdut();
     }
 
+    @GetMapping("/single/{pid}")
+    public  ResponseEntity single( @PathVariable Long pid ) {
+        return productService.singleProduct(pid);
+    }
+
 }

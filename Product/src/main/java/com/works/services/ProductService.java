@@ -17,6 +17,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -70,6 +71,21 @@ public class ProductService {
             return url;
         }
         return "";
+    }
+
+
+    // single product
+    public ResponseEntity singleProduct( Long pid ) {
+        Optional<Product> optionalProduct = productRepository.findById(pid);
+        Map<REnum, Object> hm = new LinkedHashMap<>();
+        if (optionalProduct.isPresent() ) {
+            hm.put(REnum.status, true);
+            hm.put(REnum.result, optionalProduct.get());
+        }else {
+            hm.put(REnum.status, false);
+            hm.put(REnum.message, "Not Found");
+        }
+        return new ResponseEntity(hm, HttpStatus.OK);
     }
 
 }

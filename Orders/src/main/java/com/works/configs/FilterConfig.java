@@ -1,7 +1,6 @@
 package com.works.configs;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Required;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.sleuth.Tracer;
@@ -69,7 +68,6 @@ public class FilterConfig implements Filter {
         } else {
             chain.doFilter(req, res);
         }
-
     }
 
     @Override
