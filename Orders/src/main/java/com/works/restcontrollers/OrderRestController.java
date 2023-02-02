@@ -1,12 +1,15 @@
 package com.works.restcontrollers;
 
+import com.google.gson.Gson;
 import com.works.IFeigns.INews;
 import com.works.IFeigns.IProduct;
 import com.works.IFeigns.Idummy;
 import com.works.props.JWTLogin;
 import com.works.props.JWTUser;
+import com.works.props.JmsData;
 import com.works.props.News;
 import lombok.RequiredArgsConstructor;
+import org.springframework.jms.core.JmsTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -23,11 +26,26 @@ public class OrderRestController {
     final HttpServletRequest req;
     final INews iNews;
     final Idummy idummy;
+    final JmsTemplate jmsTemplate;
 
     @GetMapping("/order")
     public Object order() {
         String token = req.getHeader("token");
         System.out.println("order Token : " + token);
+        Runnable rn = () -> {
+            for (int i = 0; i < 10000; i++) {
+                JmsData jmsData = new JmsData();
+                jmsData.setPid( (long)i );
+                jmsData.setPrice(i * 10);
+                jmsData.setTitle("TV -" + i);
+                Gson gson = new Gson();
+                String stData = gson.toJson(jmsData);
+                System.out.println(stData);
+                jmsTemplate.convertAndSend(stData);
+            }
+        };
+        new Thread(rn).start();
+
         return iProduct.single(token, 1l);
     }
 

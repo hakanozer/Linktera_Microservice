@@ -1,7 +1,9 @@
 package com.works.services;
 
 import com.works.entities.Customer;
+import com.works.entities.CustomerRedis;
 import com.works.entities.DBSession;
+import com.works.repositories.CustomerRedisRepository;
 import com.works.repositories.CustomerRepository;
 import com.works.repositories.DBSessionRepository;
 import com.works.utils.REnum;
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -24,6 +27,7 @@ public class CustomerService {
     final TinkEncDec tinkEncDec;
     final HttpSession httpSession;
     final DBSessionRepository dbSessionRepository;
+    final CustomerRedisRepository customerRedisRepository;
 
     public ResponseEntity register(Customer customer) {
         Map<REnum, Object> hm = new LinkedHashMap<>();
@@ -53,6 +57,19 @@ public class CustomerService {
                 httpSession.setAttribute("user", c);
                 String token = httpSession.getId();
                 hm.put(REnum.token, token);
+
+                // Redis Start
+                Date date = new Date();
+                CustomerRedis customerRedis = new CustomerRedis();
+                customerRedis.setCustomerID(c.getCid());
+                customerRedis.setEmail(c.getEmail());
+                customerRedis.setStartTime(date.getTime());
+                long endTime = 1000 * 60 * 10;
+                endTime = date.getTime() + endTime;
+                customerRedis.setEndTime( endTime );
+                customerRedisRepository.save(customerRedis);
+                System.out.println(customerRedis);
+                // Redis End
 
                 boolean dbControl = dbSessionRepository.existsBySessionID(token);
                 if ( !dbControl ) {

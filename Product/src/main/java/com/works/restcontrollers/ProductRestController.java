@@ -1,7 +1,9 @@
 package com.works.restcontrollers;
 
 import com.works.entities.Product;
+import com.works.entities.UserSession;
 import com.works.services.ProductService;
+import com.works.services.RedisService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 public class ProductRestController {
 
     final ProductService productService;
+    final RedisService redisService;
 
     @PostMapping("/save")
     public ResponseEntity save(@RequestBody Product product) {
@@ -32,5 +35,12 @@ public class ProductRestController {
     public  ResponseEntity list( @RequestParam(defaultValue = "1") Long cid, @RequestParam(defaultValue = "0") int pageCount ) {
         return productService.list( cid, pageCount );
     }
+
+    @GetMapping("/sessions")
+    public Iterable<UserSession> sessions(  ) {
+        return redisService.list();
+    }
+
+
 
 }

@@ -4,11 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixProperty;
 import com.works.entities.Product;
+import com.works.entities.UserSession;
 import com.works.projections.IProJoinCatProjection;
 import com.works.props.ProJoinCat;
 import com.works.props.Products;
 import com.works.repositories.ProductCatRepository;
 import com.works.repositories.ProductRepository;
+import com.works.repositories.UserSessionRepository;
 import com.works.utils.REnum;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.CacheManager;
@@ -37,6 +39,7 @@ public class ProductService {
     final ObjectMapper objectMapper;
     final CacheManager cacheManager;
 
+
     @HystrixCommand(fallbackMethod = "fallBack",
             commandProperties = @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
             ignoreExceptions = { ArithmeticException.class }
@@ -50,7 +53,10 @@ public class ProductService {
             hm.put(REnum.status, true);
             hm.put(REnum.result, productRepository.save(product));
             cacheManager.getCache("product").clear();
-        }catch (Exception ex) {}
+
+        }catch (Exception ex) {
+            System.err.println("Redis Error : " + ex);
+        }
 
         return new ResponseEntity(hm, HttpStatus.OK);
     }
@@ -114,6 +120,7 @@ public class ProductService {
         List<ProJoinCat> lsx = objectMapper.convertValue( pageList.getContent(), List.class );
 
         hm.put(REnum.result, pageList );
+
         return new ResponseEntity(hm, HttpStatus.OK);
     }
 
