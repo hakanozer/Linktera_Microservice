@@ -36,7 +36,7 @@ public class OrderRestController {
             for (int i = 0; i < 10000; i++) {
                 JmsData jmsData = new JmsData();
                 jmsData.setPid( (long)i );
-                jmsData.setPrice(i * 10);
+                jmsData.setPrice(i * 10); 
                 jmsData.setTitle("TV -" + i);
                 Gson gson = new Gson();
                 String stData = gson.toJson(jmsData);
